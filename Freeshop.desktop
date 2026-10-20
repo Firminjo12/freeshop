@@ -1,0 +1,10 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Freeshop — Encaissements
+Comment=Ouvrir la gestion des encaissements Freeshop
+Exec=/home/yameogo-firmin/.nvm/versions/node/v24.18.1/bin/node /home/yameogo-firmin/Documents/ChatGPT/freeshop/server.mjs
+Path=/home/yameogo-firmin/Documents/ChatGPT/freeshop
+Terminal=false
+Categories=Office;Finance;
+StartupNotify=true

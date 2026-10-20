@@ -1,0 +1,21 @@
+{
+  "name": "freeshop",
+  "version": "1.0.0",
+  "description": "Freeshop — Gestion des encaissements et décaissements TFC PAY",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": [
+    "tfc-pay",
+    "mobile-money",
+    "collecte",
+    "payouts"
+  ],
+  "author": "",
+  "license": "ISC"
+}

@@ -1,0 +1,8 @@
+.git
+.env
+.agents
+.codex
+node_modules
+*.log
+data/*
+!data/store.json

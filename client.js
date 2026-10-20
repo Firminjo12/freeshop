@@ -90,10 +90,6 @@ async function api(url, options = {}) {
   } catch {
     throw Error('Impossible de joindre Freeshop. Relancez le serveur local.');
   }
-  if (r.status === 401 && !window.location.pathname.endsWith('login.html')) {
-    window.location.href = '/login.html';
-    return {};
-  }
   let d = await r.json().catch(() => ({}));
   if (!r.ok) {
     throw Object.assign(Error(d.error?.message || 'La requête a échoué.'), {
@@ -1366,17 +1362,6 @@ document.addEventListener('keydown', e => {
     closeDrawer();
   }
 });
-
-// Logout
-const logoutBtn = document.querySelector('#logout-btn');
-if (logoutBtn) {
-  logoutBtn.onclick = async () => {
-    if (confirm('Voulez-vous vous déconnecter de Freeshop ?')) {
-      await api('/api/auth/logout', { method: 'POST' }).catch(() => {});
-      window.location.href = '/login.html';
-    }
-  };
-}
 
 // Initial boot
 load();

@@ -21,4 +21,6 @@ L’application utilise `https://tcf-pay.infra.dongobada.com` par défaut, l’a
 
 Les secrets sont enregistrés dans `.env`, exclu de Git et protégé par les permissions du fichier. Les demandes et événements webhook sont stockés dans `data/store.json`, également exclu de Git. Ces fichiers restent sur cet ordinateur.
 
+L’application ne demande pas de mot de passe administrateur. Toute personne disposant de son URL peut consulter et utiliser les fonctions de gestion ; ne publie pas l’URL si l’accès doit rester privé. La variable `FREESHOP_PASSWORD` n’est plus utilisée.
+
 La clé de test est recommandée pour la recette. L’application peut aussi recevoir une clé LIVE si TFC PAY a validé le compte et les autorisations requises. Aucun paiement LIVE n’a été essayé.

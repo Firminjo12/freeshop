@@ -13,44 +13,6 @@ loadEnv();
 const PORT = Number(process.env.PORT || process.env.FREESHOP_PORT || 8787);
 const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' || process.env.PORT ? '0.0.0.0' : '127.0.0.1');
 
-const sessions = new Map();
-function cleanSessions() {
-  const now = Date.now();
-  for (const [k, v] of sessions.entries()) {
-    if (v.expires < now) sessions.delete(k);
-  }
-}
-function parseCookies(req) {
-  const list = {};
-  const rc = req.headers.cookie;
-  if (rc) {
-    rc.split(';').forEach(cookie => {
-      const parts = cookie.split('=');
-      list[parts.shift().trim()] = decodeURI(parts.join('='));
-    });
-  }
-  return list;
-}
-function isAuthenticated(req) {
-  loadEnv();
-  const requiredPassword = process.env.FREESHOP_PASSWORD || '';
-  if (!requiredPassword) return true;
-  cleanSessions();
-  const cookies = parseCookies(req);
-  const token = cookies.freeshop_session;
-  if (token && sessions.has(token)) {
-    const s = sessions.get(token);
-    if (s.expires > Date.now()) return true;
-    sessions.delete(token);
-  }
-  const authHeader = req.headers.authorization;
-  if (authHeader && authHeader.startsWith('Bearer ')) {
-    const bearer = authHeader.slice(7).trim();
-    if (bearer === requiredPassword) return true;
-  }
-  return false;
-}
-
 let BASE, API_KEY, WEBHOOK_SECRET, WEBHOOK_OLD;
 function refreshConfig() {
   loadEnv();
@@ -202,44 +164,9 @@ function mime(file) { return ({'.html':'text/html; charset=utf-8','.css':'text/c
 await loadStore();
 export async function handler(req, res) {
   const host=req.headers.host || '';
-  const isLocal = /^127\.0\.0\.1(?::\d+)?$/.test(host) || /^localhost(?::\d+)?$/i.test(host);
-  if (!isLocal && !process.env.FREESHOP_PASSWORD && process.env.NODE_ENV !== 'production' && !process.env.PORT) {
-    return send(res,403,{error:'local_only',message:'Configurez FREESHOP_PASSWORD pour autoriser les accès distants.'});
-  }
   const url=new URL(req.url,`http://${host || 'localhost'}`);
   try {
     if (url.pathname==='/api/tfc/webhook' && req.method==='POST') return await handleWebhook(req,res);
-
-    // Auth endpoints
-    if (url.pathname==='/api/auth/status' && req.method==='GET') {
-      const required=Boolean(process.env.FREESHOP_PASSWORD);
-      return send(res,200,{authenticated:isAuthenticated(req),authRequired:required});
-    }
-    if (url.pathname==='/api/auth/login' && req.method==='POST') {
-      loadEnv();
-      const input=await jsonBody(req);
-      const requiredPassword=process.env.FREESHOP_PASSWORD || '';
-      if (!requiredPassword) return send(res,200,{success:true});
-      if (String(input.password || '')===requiredPassword) {
-        const token=crypto.randomBytes(32).toString('hex');
-        sessions.set(token,{expires:Date.now()+30*24*3600*1000});
-        const isSecure=req.headers['x-forwarded-proto']==='https' || req.socket.encrypted;
-        res.setHeader('Set-Cookie',`freeshop_session=${token}; Path=/; HttpOnly; SameSite=Lax; Max-Age=2592000${isSecure?'; Secure':''}`);
-        return send(res,200,{success:true});
-      }
-      return send(res,401,{error:{code:'invalid_password',message:'Mot de passe incorrect.'}});
-    }
-    if (url.pathname==='/api/auth/logout' && req.method==='POST') {
-      const cookies=parseCookies(req);
-      if (cookies.freeshop_session) sessions.delete(cookies.freeshop_session);
-      res.setHeader('Set-Cookie','freeshop_session=; Path=/; HttpOnly; Max-Age=0');
-      return send(res,200,{success:true});
-    }
-
-    // Require authentication for other /api/* routes
-    if (url.pathname.startsWith('/api/') && !isAuthenticated(req)) {
-      return send(res,401,{error:{code:'unauthorized',message:'Veuillez vous connecter.'}});
-    }
 
     if (url.pathname.startsWith('/api/') && req.method!=='GET' && req.headers.origin) {
       const originClean=req.headers.origin.replace(/^https?:\/\//,'').split(':')[0];
@@ -496,16 +423,6 @@ export async function handler(req, res) {
     }
     if (url.pathname==='/api/payment-intents' && req.method==='DELETE') return send(res,405,{error:{code:'not_supported',message:'Les intentions sont conservées pour garder l’historique des paiements.'}});
     if (req.method==='GET') {
-      const requiredPassword = process.env.FREESHOP_PASSWORD || '';
-      if (requiredPassword && !isAuthenticated(req)) {
-        if (url.pathname === '/' || url.pathname === '/index.html' || url.pathname.endsWith('.html')) {
-          const loginFile = path.resolve(ROOT, 'login.html');
-          return res.writeHead(200, {
-            'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'no-store'
-          }).end(await readFile(loginFile));
-        }
-      }
       const relative=decodeURIComponent(url.pathname==='/'?'/index.html':url.pathname);
       const file=path.resolve(ROOT,'.'+relative);
       if (!file.startsWith(ROOT+path.sep) || !existsSync(file)) return send(res,404,{error:'not_found'});

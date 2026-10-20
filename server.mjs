@@ -8,7 +8,7 @@ import crypto from 'node:crypto';
 import { spawn } from 'node:child_process';
 
 const ROOT = path.dirname(fileURLToPath(import.meta.url));
-process.chdir(ROOT);
+try { process.chdir(ROOT); } catch {}
 loadEnv();
 const PORT = Number(process.env.PORT || process.env.FREESHOP_PORT || 8787);
 const HOST = process.env.HOST || (process.env.NODE_ENV === 'production' || process.env.PORT ? '0.0.0.0' : '127.0.0.1');
@@ -116,11 +116,16 @@ function html(res, body) {
   res.end(body);
 }
 async function readBody(req, limit = 64 * 1024) {
+  if (req.body) {
+    if (typeof req.body === 'object') return Buffer.from(JSON.stringify(req.body));
+    return Buffer.from(String(req.body));
+  }
   const chunks=[]; let size=0;
   for await (const c of req) { size += c.length; if (size > limit) throw Object.assign(new Error('Requête trop volumineuse.'), { status:413 }); chunks.push(c); }
   return Buffer.concat(chunks);
 }
 async function jsonBody(req) {
+  if (req.body && typeof req.body === 'object') return req.body;
   const b = await readBody(req);
   try { return JSON.parse(b.toString('utf8')); }
   catch { throw Object.assign(new Error('Corps JSON invalide.'), { status:400 }); }

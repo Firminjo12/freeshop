@@ -2,7 +2,6 @@
   "name": "freeshop",
   "version": "1.0.0",
   "description": "Freeshop — Gestion des encaissements et décaissements TFC PAY",
-  "main": "server.mjs",
   "type": "module",
   "scripts": {
     "start": "node server.mjs"

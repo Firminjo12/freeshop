@@ -7,7 +7,7 @@ COPY package.json ./
 COPY server.mjs ./
 COPY index.html ./
 COPY login.html ./
-COPY app.js ./
+COPY client.js ./
 
 # Create data directory for local store persistence
 RUN mkdir -p /app/data

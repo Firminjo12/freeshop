@@ -6,7 +6,6 @@ WORKDIR /app
 COPY package.json ./
 COPY server.mjs ./
 COPY index.html ./
-COPY login.html ./
 COPY client.js ./
 
 # Create data directory for local store persistence

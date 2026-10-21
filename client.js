@@ -113,6 +113,10 @@ function isPayoutCancellable(p) {
   return ['created', 'pending_approval', 'queued'].includes(String(p.status).toLowerCase());
 }
 
+function isPayoutPending(p) {
+  return ['created', 'pending_approval', 'queued', 'sent', 'executing'].includes(String(p.status).toLowerCase());
+}
+
 function status(x) {
   return statusInfo[String(x.status).toLowerCase()] || ['En cours', 'working'];
 }
